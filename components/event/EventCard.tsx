@@ -34,7 +34,7 @@ export function EventCard({ event, onPress }: EventCardProps) {
   const iconColor = eventColors[event.event_type];
   const goingCount = event.attendees?.filter(a => a.status === 'going').length || 0;
   const maybeCount = event.attendees?.filter(a => a.status === 'maybe').length || 0;
-  const notGoingCount = event.attendees?.filter(a => a.status === 'not-going').length || 0;
+  const notGoingCount = event.attendees?.filter(a => a.status === 'not_going').length || 0;
 
   const dateDisplay = formatEventDate(event.event_date);
   console.log('event', event);
