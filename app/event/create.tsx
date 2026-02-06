@@ -52,10 +52,11 @@ export default function CreateEventScreen() {
         family_id: currentFamily.id,
         title: title.trim(),
         description: description.trim() || undefined,
-        event_type: eventType.trim() || undefined,
+        event_type: eventType.trim(),
         event_date: eventDate.toISOString(),
         location: location.trim() || undefined,
         created_by: user.id,
+        created_at: new Date().toISOString(),
       });
 
       showAlert('Success', 'Event created successfully');
