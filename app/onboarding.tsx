@@ -4,6 +4,8 @@ import { View, Text, StyleSheet, Dimensions, Pressable, ScrollView } from 'react
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '@/template';
+import { useFamily } from '@/hooks/useFamily';
 import { Button } from '@/components/ui';
 import { colors, spacing, typography, borderRadius } from '@/constants/theme';
 
@@ -35,6 +37,8 @@ export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const scrollViewRef = useRef<ScrollView>(null);
   const [currentPage, setCurrentPage] = useState(0);
+  const { user } = useAuth();
+  const { currentFamily, loading: familyLoading } = useFamily();
 
   const handleScroll = (event: any) => {
     const offsetX = event.nativeEvent.contentOffset.x;
@@ -46,12 +50,35 @@ export default function OnboardingScreen() {
     if (currentPage < onboardingData.length - 1) {
       scrollViewRef.current?.scrollTo({ x: width * (currentPage + 1), animated: true });
     } else {
-      router.replace('/(tabs)');
+      handleGetStarted();
     }
   };
 
+  const handleGetStarted = () => {
+    // If not logged in, go to login
+    if (!user) {
+      router.replace('/auth/login');
+      return;
+    }
+
+    // If logged in and has family, go to main app
+    if (!familyLoading && currentFamily) {
+      router.replace('/(tabs)');
+      return;
+    }
+
+    // If logged in but no family, go to family setup
+    if (!familyLoading && !currentFamily) {
+      router.replace('/family/setup');
+      return;
+    }
+
+    // Still loading family data, default to login for safety
+    router.replace('/auth/login');
+  };
+
   const handleSkip = () => {
-    router.replace('/(tabs)');
+    handleGetStarted();
   };
 
   return (

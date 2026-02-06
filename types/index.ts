@@ -63,8 +63,9 @@ export interface Event {
   familyId: string;
   title: string;
   description?: string;
-  event_type?: string;
+  event_type: 'birthday' | 'wedding' | 'dinner' | 'festival' | 'reunion' | 'other';
   event_date: string;
+  time?: string;
   location?: string;
   createdBy: string;
   attendees: EventAttendee[];

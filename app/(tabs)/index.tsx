@@ -9,7 +9,7 @@ import { useAuth } from '@/template';
 import { useFamily } from '@/hooks/useFamily';
 import { chatService } from '@/services/chatService';
 import { colors, spacing, typography, borderRadius, shadows } from '@/constants/theme';
-import { formatDistanceToNow } from '@/utils/dateUtils';
+import { formatTimestamp } from '@/utils/dateUtils';
 
 export default function ChatsScreen() {
   const router = useRouter();
@@ -61,7 +61,7 @@ export default function ChatsScreen() {
             <Text style={styles.chatName} numberOfLines={1}>{displayName}</Text>
             {lastMessage && (
               <Text style={styles.chatTime}>
-                {formatDistanceToNow(lastMessage.created_at)}
+                {formatTimestamp(lastMessage.created_at)}
               </Text>
             )}
           </View>

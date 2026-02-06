@@ -11,7 +11,7 @@ interface EventCardProps {
   onPress?: (eventId: string) => void;
 }
 
-const eventIcons: Record<Event['type'], keyof typeof MaterialIcons.glyphMap> = {
+const eventIcons: Record<Event['event_type'], keyof typeof MaterialIcons.glyphMap> = {
   birthday: 'cake',
   wedding: 'favorite',
   dinner: 'restaurant',
@@ -20,7 +20,7 @@ const eventIcons: Record<Event['type'], keyof typeof MaterialIcons.glyphMap> = {
   other: 'event',
 };
 
-const eventColors: Record<Event['type'], string> = {
+const eventColors: Record<Event['event_type'], string> = {
   birthday: '#FF6B9D',
   wedding: '#FF6B6B',
   dinner: '#4ECDC4',
@@ -30,11 +30,15 @@ const eventColors: Record<Event['type'], string> = {
 };
 
 export function EventCard({ event, onPress }: EventCardProps) {
-  const iconName = eventIcons[event.type];
-  const iconColor = eventColors[event.type];
-  const goingCount = event.attendees.filter(a => a.status === 'going').length;
-  const dateDisplay = formatEventDate(event.date);
+  const iconName = eventIcons[event.event_type];
+  const iconColor = eventColors[event.event_type];
+  const goingCount = event.attendees?.filter(a => a.status === 'going').length || 0;
+  const maybeCount = event.attendees?.filter(a => a.status === 'maybe').length || 0;
+  const notGoingCount = event.attendees?.filter(a => a.status === 'not-going').length || 0;
 
+  const dateDisplay = formatEventDate(event.event_date);
+  console.log('event', event);
+  
   return (
     <Pressable
       onPress={() => onPress?.(event.id)}
@@ -63,6 +67,20 @@ export function EventCard({ event, onPress }: EventCardProps) {
         <View style={styles.attendeesRow}>
           <MaterialIcons name="people" size={14} color={colors.success} />
           <Text style={styles.attendeesText}>{goingCount} going</Text>
+
+          {maybeCount > 0 && (
+            <>
+              <MaterialIcons name="help" size={14} color={colors.warning} />
+              <Text style={styles.attendeesTextWarning}>{maybeCount} maybe</Text>
+            </>
+          )}
+
+          {notGoingCount > 0 && (
+            <>
+              <MaterialIcons name="close" size={14} color={colors.error} />
+              <Text style={styles.attendeesTextError}>{notGoingCount} not going</Text>
+            </>
+          )}
         </View>
       </View>
     </Pressable>
@@ -121,5 +139,15 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.xs,
     fontWeight: typography.weights.medium,
     color: colors.success,
+  },
+  attendeesTextWarning: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.medium,
+    color: colors.warning,
+  },
+  attendeesTextError: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.medium,
+    color: colors.error,
   },
 });

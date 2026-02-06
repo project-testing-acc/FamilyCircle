@@ -2,14 +2,18 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { useAuth, useAlert } from '@/template';
+import { useFamily } from '@/hooks/useFamily';
 import { Button, Input } from '@/components/ui';
 import { colors, spacing, typography, borderRadius } from '@/constants/theme';
 import { MaterialIcons } from '@expo/vector-icons';
 
 export default function LoginScreen() {
+  const router = useRouter();
   const { sendOTP, verifyOTPAndLogin, signInWithPassword, operationLoading } = useAuth();
   const { showAlert } = useAlert();
+  const { currentFamily, loading: familyLoading } = useFamily();
   
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
@@ -56,7 +60,20 @@ export default function LoginScreen() {
       return;
     }
 
-    showAlert('Account created successfully!');
+    // Show success alert and navigate on OK
+    showAlert('Success', 'Account created successfully!', [
+      {
+        text: 'OK',
+        onPress: () => {
+          // Wait a bit for family data to load, then navigate
+          setTimeout(() => {
+            if (!familyLoading) {
+              router.replace(currentFamily ? '/(tabs)' : '/family/setup');
+            }
+          }, 500);
+        },
+      },
+    ]);
   };
 
   const handleLogin = async () => {
@@ -71,7 +88,20 @@ export default function LoginScreen() {
       return;
     }
 
-    showAlert('Login successful!');
+    // Show success alert and navigate on OK
+    showAlert('Success', 'Login successful!', [
+      {
+        text: 'OK',
+        onPress: () => {
+          // Wait a bit for family data to load, then navigate
+          setTimeout(() => {
+            if (!familyLoading) {
+              router.replace(currentFamily ? '/(tabs)' : '/family/setup');
+            }
+          }, 500);
+        },
+      },
+    ]);
   };
 
   return (

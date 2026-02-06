@@ -32,6 +32,13 @@ export default function RootLayout() {
                   presentation: 'modal',
                 }}
               />
+              <Stack.Screen
+                name="[id]"
+                options={{
+                  headerShown: false,
+                  animation: 'slide_from_right',
+                }}
+              />
             </Stack>
           </FamilyProvider>
         </AuthProvider>

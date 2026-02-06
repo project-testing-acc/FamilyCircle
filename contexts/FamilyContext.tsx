@@ -176,7 +176,7 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
         .from('families')
         .select('*')
         .eq('invite_code', inviteCode)
-        .single();
+        .maybeSingle();
 
       if (familyError) {
         console.error('Find family error:', familyError);

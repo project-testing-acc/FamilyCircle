@@ -1,6 +1,8 @@
 // Event Service - Event management operations
 import { getSupabaseClient } from '@/template';
-import type { Event, EventAttendee, RSVPStatus } from '@/types';
+import type { Event, EventAttendee } from '@/types';
+
+type RSVPStatus = EventAttendee['status'];
 
 function mapDbEventToEvent(db: any): Event {
   return {
@@ -52,8 +54,35 @@ export const eventService = {
     }
 
     console.log('Events loaded:', data?.length ?? 0);
-    console.log('Events data:', JSON.stringify(data, null, 2));
     return (data ?? []).map(mapDbEventToEvent);
+  },
+
+  async getEventById(eventId: string): Promise<Event> {
+    const supabase = getSupabaseClient();
+
+    const { data, error } = await supabase
+      .from('events')
+      .select(
+        `
+        *,
+        rsvps:event_rsvps (
+          user_id,
+          status,
+          user:user_profiles ( username )
+        )
+      `
+      )
+      .eq('id', eventId)
+      .single();
+
+    if (error) {
+      console.error('Get event by ID error:', error);
+      throw error;
+    }
+    console.log('data',data);
+    
+
+    return mapDbEventToEvent(data);
   },
 
   async createEvent(input: {
@@ -64,6 +93,7 @@ export const eventService = {
     event_date: string;
     location?: string;
     created_by: string;
+    created_at: string;
   }): Promise<Event> {
     const supabase = getSupabaseClient();
 
@@ -145,10 +175,10 @@ export const eventService = {
     }
   },
 
-  async rsvpEvent(eventId: string, userId: string, status: RSVPStatus) {
+  async rsvpEvent(eventId: string, userId: string, status: RSVPStatus): Promise<void> {
     const supabase = getSupabaseClient();
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('event_rsvps')
       .upsert({
         event_id: eventId,
@@ -162,7 +192,5 @@ export const eventService = {
       console.error('RSVP event error:', error);
       throw error;
     }
-
-    return data;
   },
 };

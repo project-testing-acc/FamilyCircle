@@ -1,6 +1,6 @@
 // Family Setup Screen - Create or join family
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useFamily } from '@/hooks/useFamily';
@@ -11,7 +11,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 export default function FamilySetupScreen() {
   const router = useRouter();
-  const { createFamily, joinFamily } = useFamily();
+  const { createFamily, joinFamily, currentFamily, loading: familyLoading } = useFamily();
   const { showAlert } = useAlert();
   
   const [mode, setMode] = useState<'create' | 'join'>('create');
@@ -19,6 +19,13 @@ export default function FamilySetupScreen() {
   const [inviteCode, setInviteCode] = useState('');
   const [relation, setRelation] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Redirect to tabs if user is already in a family
+    if (!familyLoading && currentFamily) {
+      router.replace('/(tabs)');
+    }
+  }, [currentFamily, familyLoading]);
 
   const handleCreateFamily = async () => {
     if (!familyName.trim()) {
@@ -37,7 +44,7 @@ export default function FamilySetupScreen() {
     }
 
     showAlert('Family created successfully!');
-    router.replace('/(tabs)');
+    router.replace(currentFamily ? '/(tabs)' : '/family/setup');
   };
 
   const handleJoinFamily = async () => {
@@ -59,6 +66,19 @@ export default function FamilySetupScreen() {
     showAlert('Joined family successfully!');
     router.replace('/(tabs)');
   };
+
+    if (familyLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  // If already in a family, show nothing (will redirect)
+  if (currentFamily) {
+    return null;
+  }
 
   return (
     <SafeAreaView style={styles.container}>
