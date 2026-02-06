@@ -1,43 +1,48 @@
 // Event Service - Event management operations
 import { getSupabaseClient } from '@/template';
+import type { Event, EventAttendee, RSVPStatus } from '@/types';
 
-export interface Event {
-  id: string;
-  family_id: string;
-  title: string;
-  description: string | null;
-  event_type: string | null;
-  event_date: string;
-  location: string | null;
-  created_by: string;
-  created_at: string;
-  creator?: {
-    username: string;
+function mapDbEventToEvent(db: any): Event {
+  return {
+    id: db.id,
+    familyId: db.family_id,
+    title: db.title,
+    description: db.description ?? undefined,
+    event_type: db.event_type ?? undefined,
+    event_date: db.event_date,
+    location: db.location ?? undefined,
+    createdBy: db.created_by,
+    createdAt: db.created_at,
+    updatedAt: db.updated_at ?? undefined,
+    reminderSet: false,
+    attendees: (db.rsvps ?? []).map(
+      (a: any): EventAttendee => ({
+        userId: a.user_id,
+        userName: a.user?.username ?? '',
+        status: a.status,
+      })
+    ),
+    chatId: db.chat_id ?? undefined,
   };
-  rsvps?: Array<{
-    user_id: string;
-    status: string;
-    user: {
-      username: string;
-    };
-  }>;
 }
 
 export const eventService = {
   async getEvents(familyId: string): Promise<Event[]> {
     const supabase = getSupabaseClient();
-    
+    console.log('Getting events for family:', familyId);
+
     const { data, error } = await supabase
       .from('events')
-      .select(`
+      .select(
+        `
         *,
-        creator:user_profiles!created_by(username),
-        rsvps:event_rsvps(
+        rsvps:event_rsvps (
           user_id,
           status,
-          user:user_profiles(username)
+          user:user_profiles ( username )
         )
-      `)
+      `
+      )
       .eq('family_id', familyId)
       .gte('event_date', new Date().toISOString())
       .order('event_date', { ascending: true });
@@ -46,11 +51,12 @@ export const eventService = {
       console.error('Get events error:', error);
       throw error;
     }
-    
-    return data || [];
+
+    console.log('Events loaded:', data?.length ?? 0);
+    return (data ?? []).map(mapDbEventToEvent);
   },
 
-  async createEvent(eventData: {
+  async createEvent(input: {
     family_id: string;
     title: string;
     description?: string;
@@ -58,47 +64,90 @@ export const eventService = {
     event_date: string;
     location?: string;
     created_by: string;
-  }) {
+  }): Promise<Event> {
     const supabase = getSupabaseClient();
-    
+
     const { data, error } = await supabase
       .from('events')
-      .insert(eventData)
-      .select()
+      .insert({
+        family_id: input.family_id,
+        title: input.title,
+        description: input.description ?? null,
+        event_type: input.event_type ?? null,
+        event_date: input.event_date,
+        location: input.location ?? null,
+        created_by: input.created_by,
+      })
+      .select(
+        `
+        *,
+        rsvps:event_rsvps (
+          user_id,
+          status,
+          user:user_profiles ( username )
+        )
+      `
+      )
       .single();
 
-    if (error) throw error;
-    return data;
+    if (error) {
+      console.error('Create event error:', error);
+      throw error;
+    }
+
+    return mapDbEventToEvent(data);
   },
 
-  async updateEvent(eventId: string, updates: Partial<Event>) {
+  async updateEvent(
+    eventId: string,
+    updates: Partial<Pick<Event, 'title' | 'description' | 'event_date' | 'location' | 'event_type'>>
+  ): Promise<Event> {
     const supabase = getSupabaseClient();
-    
+
     const { data, error } = await supabase
       .from('events')
-      .update(updates)
+      .update({
+        title: updates.title,
+        description: updates.description,
+        event_date: updates.event_date,
+        location: updates.location,
+        event_type: updates.event_type,
+      })
       .eq('id', eventId)
-      .select()
+      .select(
+        `
+        *,
+        rsvps:event_rsvps (
+          user_id,
+          status,
+          user:user_profiles ( username )
+        )
+      `
+      )
       .single();
 
-    if (error) throw error;
-    return data;
+    if (error) {
+      console.error('Update event error:', error);
+      throw error;
+    }
+
+    return mapDbEventToEvent(data);
   },
 
-  async deleteEvent(eventId: string) {
+  async deleteEvent(eventId: string): Promise<void> {
     const supabase = getSupabaseClient();
-    
-    const { error } = await supabase
-      .from('events')
-      .delete()
-      .eq('id', eventId);
 
-    if (error) throw error;
+    const { error } = await supabase.from('events').delete().eq('id', eventId);
+
+    if (error) {
+      console.error('Delete event error:', error);
+      throw error;
+    }
   },
 
-  async rsvpEvent(eventId: string, userId: string, status: 'going' | 'maybe' | 'not_going') {
+  async rsvpEvent(eventId: string, userId: string, status: RSVPStatus) {
     const supabase = getSupabaseClient();
-    
+
     const { data, error } = await supabase
       .from('event_rsvps')
       .upsert({
@@ -109,7 +158,11 @@ export const eventService = {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('RSVP event error:', error);
+      throw error;
+    }
+
     return data;
   },
 };

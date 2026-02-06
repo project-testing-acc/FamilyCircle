@@ -6,7 +6,8 @@ import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFamily } from '@/hooks/useFamily';
 import { useAuth } from '@/template';
-import { eventService, Event } from '@/services/eventService';
+import { eventService } from '@/services/eventService';
+import type { Event } from '@/types';
 import { EventCard } from '@/components/event';
 import { colors, spacing, typography, borderRadius } from '@/constants/theme';
 

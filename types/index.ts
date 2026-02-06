@@ -60,24 +60,27 @@ export interface Chat {
 
 export interface Event {
   id: string;
+  familyId: string;
   title: string;
   description?: string;
-  type: 'birthday' | 'wedding' | 'dinner' | 'festival' | 'reunion' | 'other';
-  date: string;
-  time?: string;
+  event_type?: string;
+  event_date: string;
   location?: string;
   createdBy: string;
   attendees: EventAttendee[];
   chatId?: string;
   reminderSet: boolean;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface EventAttendee {
   userId: string;
   userName: string;
-  status: 'going' | 'maybe' | 'not-going' | 'pending';
+  status: 'going' | 'maybe' | 'not_going';
 }
+
+export type RSVPStatus = 'going' | 'maybe' | 'not_going';
 
 export interface Trip {
   id: string;
